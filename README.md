@@ -17,7 +17,6 @@ prompt, and compare what each one builds.
 |---|---|
 | `.keelson/workflows/frontend-mix.yaml` | The workflow — a 10-node DAG Keelson runs unattended |
 | `spec.md` | A ready-to-use input brief (the "Cosmos" planetarium app) |
-| `examples/cosmos/` | A complete worked example with the real artifacts each step produced |
 | `.agents/skills/frontend-mix-*` | Eight agent skills for driving the same chain by hand from a chat session |
 | `.agents/artifacts/` | Where a finished run commits its handoff trail |
 
@@ -40,8 +39,10 @@ exactly why different models can hand off cleanly between steps.
 | 8 | `deploy` | strong reasoning | `deploy-summary.md` |
 | 9 | `finalize` | — (bash) | commits the build + artifact trail |
 
-The smoke step is the one that catches "compiles green, renders broken" —
-see [the worked example](examples/cosmos/README.md) for a real instance.
+The smoke step is the one that catches "compiles green, renders broken": a
+build that typechecks, lints, and serves HTTP 200 but renders blank or
+unstyled (a Tailwind `content` glob that misses a directory does exactly
+this). Static checks pass it; only driving the running app catches it.
 
 ## Quick start
 
