@@ -11,6 +11,9 @@ build/
 .env.*
 !.env.example
 
+# Keelson worktree-isolated runs check out under the project root
+.worktrees/
+
 # Runtime noise
 *.log
 .DS_Store

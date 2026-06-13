@@ -17,6 +17,13 @@
 # each model does with identical instructions. Run with `--worktree` to land
 # each attempt on its own branch.
 #
+# Model ids are account-dependent. List what your Copilot subscription
+# serves with `curl -s http://127.0.0.1:7878/api/providers/copilot/models`
+# (or use the model picker in the web UI); `model: auto` always works.
+# Heavy nodes (build-ui, integrate) can exceed the default 600s per-node
+# budget on slower models - raise it with KEELSON_WORKFLOW_PROMPT_TIMEOUT_S
+# on the server when that happens.
+#
 # Artifact passing convention (READ THIS BEFORE EDITING):
 # each node writes its primary output to a markdown file under
 # `$ARTIFACTS_DIR/` (context.md → plan.md → ui-summary.md →
