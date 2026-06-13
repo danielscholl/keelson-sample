@@ -1,9 +1,10 @@
 # Frontend-Mix Example: the Cosmos Build
 
-This is a **worked example** of the mixed-provider frontend workflow, ported for GitHub Copilot
-CLI. The `frontend-mix-*` skills in `.agents/skills/` are run end-to-end to build a real app, and
-the actual documents each step produced are captured in [`artifacts/`](./artifacts) so you can read
-exactly what gets handed from one step to the next.
+This is a **worked example** of the frontend-mix chain: a real app built end-to-end, with the
+actual documents each step produced captured in [`artifacts/`](./artifacts) so you can read
+exactly what gets handed from one step to the next. These artifacts came from running the chain
+step-by-step as agent skills (`.agents/skills/frontend-mix-*`); the `frontend-mix` Keelson
+workflow in `.keelson/workflows/` runs the same chain unattended and produces the same trail.
 
 The app built here is **Cosmos**, a cinematic, no-login deep-sky planetarium: 12 real celestial
 objects, a SQLite-backed API, a deterministic "object of the day", and an anonymous "chills"
@@ -76,8 +77,8 @@ whole argument for the smoke step: "compiles green, renders broken."
 
 ## Notes
 
-- `spec.md` is the input brief that started the run.
-- `artifacts/` here mirrors what a live run writes to `.agents/artifacts/` at the repo root.
+- [`spec.md`](../../spec.md) (repo root) is the input brief that started the run.
+- `artifacts/` here mirrors what a live run leaves in `.agents/artifacts/` at the repo root.
 - These are real artifacts from the Cosmos build runs. `ui-summary.md` is the genuine design-step
   output (it lists the `// INTEGRATION:` stubs); the rest are from the complete end-to-end run that
   also produced the validate/smoke/deploy docs. The provider names in the table reflect that

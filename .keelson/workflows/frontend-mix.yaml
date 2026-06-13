@@ -1,49 +1,58 @@
-name: archon-build-frontend-mixed
+# frontend-mix — build a full-stack web app by routing each phase of the
+# build to the model class that earns its tokens at that step.
+#
+# The chain: explore → plan → build-ui → integrate → validate →
+# fix-validation → smoke → approve-deploy → deploy → finalize.
+#
+# Model routing (resolution order: node.model → workflow.model →
+# provider.defaultModel):
+#   - fast / low-cost   (workflow default)  explore, validate, smoke — grind
+#                       work where a quick model is plenty.
+#   - strong reasoning  plan, integrate, fix-validation, deploy — judgment.
+#   - UI-strong         build-ui — frontend design from the plan's copy.
+#
+# This file is the swap point for provider/model experiments. Change a
+# node's `model:` (or add `provider:` per node after enabling more providers
+# in ~/.keelson/config.json) and re-run with the same prompt to compare what
+# each model does with identical instructions. Run with `--worktree` to land
+# each attempt on its own branch.
+#
+# Artifact passing convention (READ THIS BEFORE EDITING):
+# each node writes its primary output to a markdown file under
+# `$ARTIFACTS_DIR/` (context.md → plan.md → ui-summary.md →
+# integration-summary.md → validation-summary.md OR validation-issues.md →
+# resolution-summary.md → smoke-summary.md → deploy-summary.md).
+# Downstream nodes MUST open those files with the Read tool. The
+# `$NODE.output` variable is only the closing text message of the previous
+# node — it is NOT the artifact. Every prompt below explicitly tells the
+# node to Read the file from $ARTIFACTS_DIR. Do not regress this.
+# $ARTIFACTS_DIR is a per-run scratch directory that is deleted when the
+# run completes — the finalize node copies it into `.agents/artifacts/`
+# and commits, so the handoff trail survives the run.
+
+name: frontend-mix
+provider: copilot
+model: claude-haiku-4.5
 description: |
-  Build a full-stack web app by routing each phase to the model that earns its
-  tokens at that step.
-
-  - Opus plans the architecture, page copy, integration scope, and deployment
-    target.
-  - Gemini 3.5 Flash (via Pi → OpenRouter) designs the UI from the plan's copy.
-  - Opus integrates everything the plan calls for (auth, APIs, third parties).
-  - Sonnet validates the build. If validation can't be made clean in two
-    attempts, an Opus fix-validation node reads the failure list and addresses
-    each issue.
-  - Sonnet smoke-tests the running app with agent-browser - catches runtime
-    bugs static checks miss (broken routes, dead buttons, unstyled renders).
-  - Opus deploys per whatever target the plan picked.
-
-  The workflow is provider-routing, not vendor-specific. The `integrate` and
-  `deploy` nodes have the `clerk-cli` skill loaded as a *capability* so they
-  CAN drive Clerk if the plan calls for it - but they only use it when the
-  plan says so. Swap in any other tool the plan asks for (Supabase, Stripe,
-  Vercel, Fly, Railway, etc.) and these nodes still work.
-
-  ## Artifact passing convention (READ THIS BEFORE EDITING)
-
-  Each node writes its primary output to a markdown file under `$ARTIFACTS_DIR/`
-  (context.md → plan.md → ui-summary.md → integration-summary.md →
-  validation-summary.md OR validation-issues.md → resolution-summary.md →
-  smoke-summary.md → deploy-summary.md).
-
-  Downstream nodes MUST open those files with the Read tool. The `$NODE.output`
-  variable is only the closing text message of the previous node - it is NOT
-  the artifact. Every prompt below explicitly tells the node to Read the file
-  from $ARTIFACTS_DIR. Do not regress this.
-
-  For the Saturday 2026-05-30 stream, the chosen target is an Archon
-  Benchmarking dashboard and the chosen integrations happen to be Clerk auth
-  + a Next.js API + Vercel deploy. None of that is hard-coded here.
-
-# Workflow defaults - overridden per node where it matters.
-provider: claude
-model: sonnet
+  Use when: You want to build (or rebuild) a full-stack web app from a short
+            brief or a spec file, with each phase routed to the model class
+            that fits it — and you want the handoff artifacts kept.
+  Triggers: "build the app", "run frontend-mix", "scaffold the site from
+            spec.md", "build a landing page for ...".
+  Does: Explores the repo -> plans architecture, page copy, integrations,
+        and a deploy target -> builds the UI -> wires integrations ->
+        validates (install/typecheck/lint/build/tests) -> fixes what
+        validation flagged -> smoke-tests the RUNNING app -> pauses for
+        your approval -> deploys per the plan -> commits the build plus
+        the artifact trail.
+  NOT for: Small edits to an existing app (use chat). Repos where an
+           uncommitted build landing on your branch would be unwelcome
+           (run with --worktree instead).
 
 nodes:
   # ───────────────────────────────────────────────────────────────
-  # PHASE 1: EXPLORE
-  # Cheap context gathering. Sonnet is plenty for "what's in here?"
+  # PHASE 1: EXPLORE — cheap context gathering; the fast default
+  # model is plenty for "what's in here?"
   # ───────────────────────────────────────────────────────────────
   - id: explore
     context: fresh
@@ -66,8 +75,9 @@ nodes:
       ## Output
 
       Write a one-page context dump to `$ARTIFACTS_DIR/context.md`. Concrete:
-      file paths, versions, what's present, what's missing. The plan node feeds
-      directly off this file.
+      file paths, versions, what's present, what's missing. If the request
+      pointed at a spec file, record that path explicitly so the plan node
+      can open it. The plan node feeds directly off this file.
 
       ## Final turn
 
@@ -75,12 +85,11 @@ nodes:
       (N bytes). Repo summary: <one sentence>." Never end silently.
 
   # ───────────────────────────────────────────────────────────────
-  # PHASE 2: PLAN  (Opus - judgment-heavy)
+  # PHASE 2: PLAN — judgment-heavy; strong-reasoning model.
   # Architecture + page copy + explicit UI vs Integration split + deploy target.
   # ───────────────────────────────────────────────────────────────
   - id: plan
-    provider: claude
-    model: opus
+    model: claude-sonnet-4.6
     depends_on: [explore]
     context: fresh
     prompt: |
@@ -103,40 +112,39 @@ nodes:
 
       ## Critical: produce a plan with THREE explicit sections
 
-      ### SECTION A - UI Scope (for the Gemini node)
+      ### SECTION A - UI Scope (for the build-ui node)
 
       For every page in the app: route, purpose, what it contains.
       For every component: name, what it shows, where it appears.
 
       **Write the actual user-facing copy.** Every headline, sub-headline, button
-      label, card title, empty-state message, error message. Gemini will build
-      the UI directly from this text; if the copy is vague, the UI is vague.
+      label, card title, empty-state message, error message. The build-ui node
+      builds directly from this text; if the copy is vague, the UI is vague.
 
-      ### SECTION B - Integration Scope (for the Opus integration node)
+      ### SECTION B - Integration Scope (for the integrate node)
 
       List every non-UI concern. Be specific about which tools/services and why.
       Examples (pick what this app actually needs - these are not mandatory):
       - Authentication: which provider, which flows (sign-in, sign-up, protected
-        routes, org switcher), and the exact CLI / SDK calls
+        routes), and the exact CLI / SDK calls. "No auth" is a valid answer.
       - Backend API: every endpoint - method, path, input, output, auth check
       - External APIs / SDKs and where they're called
       - Data model: tables, fields, indexes; which database
       - Background jobs / async workflows, if any
 
-      ### SECTION C - Deployment Plan (for the Opus deploy node)
+      ### SECTION C - Deployment Plan (for the deploy node)
 
       State the deployment target explicitly. Examples (pick one based on what
-      fits this app - do NOT pre-commit to anything):
+      fits this app and what the user request asked for - do NOT pre-commit):
       - "Local only - no deployment needed this run"
       - "Vercel via `vercel deploy --prod`"
       - "Fly.io via `flyctl deploy`"
       - "Railway via `railway up`"
-      - "Auth provider's deploy command (e.g. `clerk deploy` to take a Clerk
-        instance from dev to prod)"
       - "Custom - describe the exact commands"
 
-      Include any pre-deploy steps (env var promotion, migrations, etc.) and
-      what counts as deploy success.
+      If the user request says local-only, SECTION C is "Local only". Include
+      any pre-deploy steps (env var promotion, migrations, etc.) and what
+      counts as deploy success.
 
       ## Output
 
@@ -151,30 +159,18 @@ nodes:
       (N bytes). Sections A/B/C complete." Never end silently after a tool call.
 
   # ───────────────────────────────────────────────────────────────
-  # PHASE 3: BUILD UI  (Gemini 3.5 Flash via Pi → OpenRouter)
-  # Beautiful frontends are Gemini's strong suit. Pi is the harness;
-  # OpenRouter is the route. Cole's OPENROUTER_API_KEY lives in Pi's auth.
+  # PHASE 3: BUILD UI — UI-strong model. This node is the classic
+  # swap point: try a different model: (or provider:) here and re-run
+  # the same prompt to compare frontends.
   # ───────────────────────────────────────────────────────────────
   - id: build-ui
-    provider: pi
-    # Requires: (1) patched Archon source (resource-loader.ts passes
-    # agentDir: getAgentDir()), (2) pi-ai bumped to ^0.73.1, (3)
-    # ~/.pi/agent/models.json registering google/gemini-3.5-flash as a
-    # custom OpenRouter model, (4) patched direnv extension (race fix).
-    # See setup-notes.md in the bundle. Pi extensions stay ENABLED.
-    # Run via `bun C:/Users/colem/Archon/packages/cli/src/cli.ts workflow run ...`
-    # NOT the compiled `archon` binary (which still has stale pi-ai 0.67.5).
-    # Pi → OpenRouter → google/gemini-3.5-flash. OpenRouter account verified
-    # paid (is_free_tier: false, unlimited rate, $11+ remaining credits) and
-    # the model is fully available at $1.50/$9 per M. Earlier 429s in v4/v5
-    # were transient and resolved.
-    model: openrouter/google/gemini-3.5-flash
+    model: gemini-3.5-flash
     depends_on: [plan]
     context: fresh
     prompt: |
-      You are building the frontend using Gemini 3.5 Flash. **Only build the UI
-      surface - auth, API calls, third-party SDKs, and deployment belong to the
-      later nodes. Do not touch them.**
+      You are building the frontend. **Only build the UI surface - auth, API
+      calls, third-party SDKs, and deployment belong to the later nodes. Do
+      not touch them.**
 
       ## STEP 0 - Read the plan (REQUIRED, do this FIRST)
 
@@ -187,7 +183,7 @@ nodes:
 
       ## CRITICAL - how to end every turn
 
-      The Archon workflow requires your final message to contain text content.
+      This workflow requires your final message to contain text content.
       A turn that ends with only a tool call (and no closing text) breaks the
       pipeline. **Always finish with a short written summary** - even if a
       tool call failed, even if the task isn't fully done, even if you only
@@ -231,17 +227,13 @@ nodes:
       will cause the integration node to skip and the workflow to fail.
 
   # ───────────────────────────────────────────────────────────────
-  # PHASE 4: INTEGRATE  (Opus - wires whatever SECTION B calls for)
-  # Skill `clerk-cli` is preloaded as a *capability* - used only if the plan
-  # picked Clerk. Same node would handle Supabase, NextAuth, Stripe, etc.
+  # PHASE 4: INTEGRATE — strong reasoning; wires whatever SECTION B
+  # calls for using ordinary tools (Bash for any CLI the plan picked).
   # ───────────────────────────────────────────────────────────────
   - id: integrate
-    provider: claude
-    model: opus
+    model: claude-sonnet-4.6
     depends_on: [build-ui]
     context: fresh
-    skills:
-      - clerk-cli       # capability - engage only if SECTION B selected Clerk
     prompt: |
       You are wiring backend + integrations into the UI scaffold the previous
       node built. **Read SECTION B of the plan. Implement exactly what it
@@ -260,25 +252,18 @@ nodes:
       Do NOT proceed until you have actually called Read on both files. The
       prior nodes' closing chat messages are NOT the artifacts.
 
-      The `clerk-cli` skill is loaded so you CAN drive the `clerk` binary
-      directly if SECTION B picked Clerk for auth. If SECTION B picked a
-      different auth provider, ignore the skill and use whatever the plan
-      says (Supabase, NextAuth, Auth.js, etc.).
-
       ## Your job
 
-      1. **Auth** - implement whatever auth provider SECTION B chose. If Clerk,
-         use the `clerk` binary via the loaded skill (`clerk init`, `clerk link`,
-         `clerk env pull`, `clerk config patch --dry-run` then apply,
-         `clerk doctor --json` at the end).
+      1. **Auth** - implement whatever auth approach SECTION B chose, using
+         that provider's documented CLI / SDK via Bash and the docs you know.
+         If SECTION B says "no auth", skip this entirely - do not add one.
       2. **Wire up every `// INTEGRATION:` stub** the UI node left.
       3. **Build the backend API** per SECTION B. Every protected handler
          authenticates against the chosen auth provider's session.
       4. **External services** - wire up any SDKs / APIs SECTION B listed
          (Stripe, Supabase, OpenAI, etc.).
-      5. Run whatever health checks the chosen stack provides (e.g.
-         `clerk doctor --json` for Clerk). Fix every `fail` before signaling
-         complete.
+      5. Run whatever health checks the chosen stack provides. Fix every
+         failure before signaling complete.
 
       ## Output
 
@@ -288,13 +273,13 @@ nodes:
       ## Final turn
 
       End with: "Wrote $ARTIFACTS_DIR/integration-summary.md. Auth provider:
-      <name>. Endpoints wired: <count>. Stubs resolved: <N> of <M>." Never end
-      silently.
+      <name or none>. Endpoints wired: <count>. Stubs resolved: <N> of <M>."
+      Never end silently.
 
   # ───────────────────────────────────────────────────────────────
-  # PHASE 5: VALIDATE  (Sonnet - grind work, 2-attempt cap)
-  # Writes EITHER validation-summary.md (clean) OR validation-issues.md
-  # (failures). The next node (fix-validation) reads whichever exists.
+  # PHASE 5: VALIDATE — grind work, 2-attempt cap. Writes EITHER
+  # validation-summary.md (clean) OR validation-issues.md (failures).
+  # The next node (fix-validation) reads whichever exists.
   # ───────────────────────────────────────────────────────────────
   - id: validate
     depends_on: [integrate]
@@ -346,7 +331,7 @@ nodes:
       - One-sentence hypothesis for the root cause
 
       Then STOP. The fix-validation node will read this file and address each
-      failure with a fresh-context Opus session.
+      failure with a fresh-context session on a stronger model.
 
       ## Final turn
 
@@ -355,14 +340,12 @@ nodes:
       Never end silently.
 
   # ───────────────────────────────────────────────────────────────
-  # PHASE 5b: FIX VALIDATION ISSUES  (Opus - addresses what validate flagged)
-  # No-ops cleanly if validation-issues.md doesn't exist (clean validate run).
-  # Otherwise: reads the failure list, addresses each, re-runs validation,
-  # writes resolution-summary.md.
+  # PHASE 5b: FIX VALIDATION — strong reasoning; addresses what
+  # validate flagged. No-ops cleanly if validation-issues.md doesn't
+  # exist (clean validate run).
   # ───────────────────────────────────────────────────────────────
   - id: fix-validation
-    provider: claude
-    model: opus
+    model: claude-sonnet-4.6
     depends_on: [validate]
     context: fresh
     prompt: |
@@ -377,7 +360,7 @@ nodes:
 
       1. Write `$ARTIFACTS_DIR/resolution-summary.md` containing the single
          line: "No validation issues to address. validation-summary.md was
-         clean."
+         clean. READY TO DEPLOY"
       2. End your turn with: "No-op: validation was clean. Wrote
          resolution-summary.md."
 
@@ -408,7 +391,7 @@ nodes:
       - Skipping validation steps you can't fix
 
       If a failure genuinely cannot be fixed without changing the plan (e.g.
-      a missing third-party API key, a Clerk feature requiring a paid plan),
+      a missing third-party API key, a feature requiring a paid plan),
       record it as an OPEN ISSUE in resolution-summary.md with the exact
       blocker - do not silently skip.
 
@@ -432,15 +415,13 @@ nodes:
       <READY TO DEPLOY | NOT READY: reason>". Never end silently.
 
   # ───────────────────────────────────────────────────────────────
-  # PHASE 6: SMOKE  (Sonnet + agent-browser - drives the RUNNING app)
-  # Catches the bugs static checks miss: broken routes, dead buttons,
-  # soft-404s, and pages that load 200 but render unstyled.
+  # PHASE 6: SMOKE — drives the RUNNING app. Catches the bugs static
+  # checks miss: broken routes, dead buttons, soft-404s, and pages
+  # that load 200 but render unstyled.
   # ───────────────────────────────────────────────────────────────
   - id: smoke
     depends_on: [fix-validation]
     context: fresh
-    skills:
-      - agent-browser   # capability - falls back to curl-only if unavailable
     prompt: |
       Runtime smoke-test the freshly validated app by driving the RUNNING app.
       Static checks already passed; your job is to confirm the running app
@@ -455,9 +436,10 @@ nodes:
          <reason>", do NOT smoke a broken build. Write a smoke-summary noting it
          was skipped, and end your turn.
 
-      The `agent-browser` skill is loaded - use it to drive a real browser. If
-      it is unavailable on this machine, fall back to curl-only checks (routes +
-      status codes + API) and say so in the summary.
+      Work with the tools you have: curl for routes, status codes, and API
+      checks; if a browser-driving capability is available in your tool set,
+      use it to render pages and screenshot them, and say in the summary
+      which mode you used.
 
       ## Start the app
 
@@ -468,25 +450,26 @@ nodes:
 
       ## Drive the app
 
-      - Open each main route. Wait for network idle plus a few seconds (dev-mode
-        hydration lags). Confirm it renders STYLED with no console errors - a
-        200 is NOT enough. A blank, unstyled, or collapsed page (e.g. from a
-        broken CSS content glob) is a DEFECT even though it loads. Screenshot
-        each page and actually look at it.
-      - Exercise the primary interaction (the main button/form/action). Confirm
-        the UI updates and, if it hits an API, the server state actually changes
-        (verify with curl).
+      - Open each main route. Confirm it returns 200 AND its HTML actually
+        contains the expected page content (grep the response for a headline
+        from the plan's copy). A blank or collapsed page is a DEFECT even
+        though it loads.
+      - Exercise the primary interaction's API path: if the main action hits
+        an endpoint, curl that endpoint and confirm the server state actually
+        changes.
       - Hit one clearly-invalid route and confirm a real 404, not a soft 200.
       - curl the key API endpoints and confirm sane status codes.
+      - If you have a browser capability: also render each route, check for
+        console errors, and save screenshots into `$ARTIFACTS_DIR/smoke-shots/`.
 
-      Save screenshots into `$ARTIFACTS_DIR/smoke-shots/`. Then kill the server
-      process and free the port. Do not cry wolf - rule out hydration timing and
-      your own rate-limiting before recording a defect.
+      Then kill the server process and free the port. Do not cry wolf - rule
+      out startup/hydration timing and your own rate-limiting before
+      recording a defect.
 
       ## Output
 
       Write `$ARTIFACTS_DIR/smoke-summary.md` with each route + status code, each
-      interaction + result, any console errors, and a final verdict line:
+      check + result, any console errors, and a final verdict line:
       `SMOKE: PASS`, or `SMOKE: DEFECTS` followed by each defect (what you did,
       expected vs actual, the file most likely responsible). Do not silently
       pass real runtime bugs.
@@ -497,20 +480,39 @@ nodes:
       SMOKE: DEFECTS (N)>." Never end silently.
 
   # ───────────────────────────────────────────────────────────────
-  # PHASE 7: DEPLOY  (Opus - runs whatever SECTION C specifies)
-  # Reads resolution-summary.md to confirm validation is clean before
-  # deploying. Generic deployment node - plan picks the actual target.
+  # PHASE 7: APPROVAL GATE — the run pauses here. Review the
+  # artifacts (and the app), then reply from the Workflows UI or:
+  #   keelson workflow respond <runId> approve-deploy "deploy"
+  # ───────────────────────────────────────────────────────────────
+  - id: approve-deploy
+    depends_on: [smoke]
+    approval:
+      message: |
+        Build, validation, and smoke test are complete. Review the smoke
+        verdict above (and try the app locally if you like) before anything
+        leaves this machine.
+
+        Reply "deploy" to run the plan's SECTION C deployment, or "skip" to
+        finish without deploying. (If the plan chose "local only", either
+        reply records your sign-off and the deploy node exits cleanly.)
+
+  # ───────────────────────────────────────────────────────────────
+  # PHASE 8: DEPLOY — strong reasoning; runs whatever SECTION C
+  # specifies, honoring the approval gate's reply.
   # ───────────────────────────────────────────────────────────────
   - id: deploy
-    provider: claude
-    model: opus
-    depends_on: [smoke]
+    model: claude-sonnet-4.6
+    depends_on: [approve-deploy]
     context: fresh
-    skills:
-      - clerk-cli       # capability - engage only if SECTION C uses `clerk deploy`
     prompt: |
       You are deploying the application. **Read SECTION C of the plan and do
       exactly what it says - nothing more, nothing less.**
+
+      The operator answered the approval gate with: "$approve-deploy.output"
+
+      If that reply is "skip" (or anything other than a clear go-ahead),
+      write `$ARTIFACTS_DIR/deploy-summary.md` noting the deploy was skipped
+      by the operator, and end your turn. Do not deploy.
 
       ## STEP 0 - Read the prior artifacts (REQUIRED, do this FIRST)
 
@@ -533,8 +535,6 @@ nodes:
         deploy was needed and stop.
       - A platform CLI (`vercel deploy --prod`, `flyctl deploy`, `railway up`,
         `wrangler deploy`, etc.) - invoke the CLI.
-      - An auth provider's deploy step (`clerk deploy` is loaded as a skill
-        capability - use it if SECTION C asked for it).
       - Custom commands SECTION C describes.
 
       ## Your job
@@ -542,8 +542,8 @@ nodes:
       1. Read SECTION C. Identify the deploy target and pre-deploy steps.
       2. Run pre-deploy steps in order (env promotion, migrations, etc.).
       3. **Dry-run first wherever the tool supports it** (`vercel deploy
-         --prebuilt`, `clerk deploy --dry-run`, `flyctl deploy --dry-run`).
-         Show the diff or planned changes.
+         --prebuilt`, `flyctl deploy --dry-run`, etc.). Show the diff or
+         planned changes.
       4. If the dry-run looks correct, run the real deploy.
       5. Run the post-deploy verification SECTION C describes (curl the
          deployed URL, check a health endpoint, etc.).
@@ -560,25 +560,21 @@ nodes:
       <target>. Status: <deployed | skipped | failed>." Never end silently.
 
   # ───────────────────────────────────────────────────────────────
-  # PHASE 8: FINALIZE
+  # PHASE 9: FINALIZE — copy the handoff trail into the repo (the
+  # per-run $ARTIFACTS_DIR is deleted when the run ends) and commit.
+  # Bash nodes get inputs via env vars, not text substitution.
   # ───────────────────────────────────────────────────────────────
   - id: finalize
     depends_on: [deploy]
     bash: |
       set -euo pipefail
-      git add -A
-      git commit -m "feat: ship $ARGUMENTS via mixed-provider workflow" || echo "nothing to commit"
-      echo "---"
-      echo "Context:     $ARTIFACTS_DIR/context.md"
-      echo "Plan:        $ARTIFACTS_DIR/plan.md"
-      echo "UI:          $ARTIFACTS_DIR/ui-summary.md"
-      echo "Integration: $ARTIFACTS_DIR/integration-summary.md"
-      if [ -f "$ARTIFACTS_DIR/validation-issues.md" ]; then
-        echo "Validation:  $ARTIFACTS_DIR/validation-issues.md (issues found)"
-        echo "Resolution:  $ARTIFACTS_DIR/resolution-summary.md"
-      else
-        echo "Validation:  $ARTIFACTS_DIR/validation-summary.md (clean)"
+      mkdir -p .agents/artifacts
+      if [ -n "${KEELSON_ARTIFACTS_DIR:-}" ] && [ -d "$KEELSON_ARTIFACTS_DIR" ]; then
+        cp -R "$KEELSON_ARTIFACTS_DIR"/. .agents/artifacts/
       fi
-      echo "Smoke:       $ARTIFACTS_DIR/smoke-summary.md"
-      echo "Deploy:      $ARTIFACTS_DIR/deploy-summary.md"
-    timeout: 30000
+      git add -A
+      git commit -m "feat: frontend-mix build - ${KEELSON_ARGUMENTS:-unnamed run}" || echo "nothing to commit"
+      echo "---"
+      echo "Artifact trail committed under .agents/artifacts/:"
+      ls -1 .agents/artifacts | sed 's/^/  /'
+    timeout: 60000

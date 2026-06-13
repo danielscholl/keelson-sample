@@ -1,0 +1,16 @@
+# Dependencies and build output of the app the workflow scaffolds
+node_modules/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# Local env and secrets — never commit these
+.env
+.env.*
+!.env.example
+
+# Runtime noise
+*.log
+.DS_Store
