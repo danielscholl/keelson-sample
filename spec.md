@@ -110,7 +110,7 @@ Keep it self-contained — no third-party services, no external API keys.
 
 ## Deployment
 
-**Local only for this build** — `npm run dev`, no cloud deploy required. (Optional
+**Local only for this build** — `bun run dev`, no cloud deploy required. (Optional
 stretch: a single `vercel deploy --prod`, but it is not needed and should not block the
 build.)
 

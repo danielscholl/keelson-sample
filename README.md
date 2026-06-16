@@ -56,7 +56,7 @@ gh repo create my-frontend-mix --template danielscholl/keelson-sample --private 
 cd my-frontend-mix
 
 # 2. Start the server and register this clone as a project
-keelson service start
+keelson start
 keelson project add frontend-mix "$(pwd)"
 
 # 3. Sanity-check the workflow, then run it against the bundled spec
@@ -115,6 +115,19 @@ each skill tells you the next step.
   it too).
 - No other keys needed: the bundled `spec.md` describes a no-auth, local-only
   app on purpose.
+
+## Credits
+
+This sample is a Keelson port of **[frontend-mix](https://github.com/coleam00/frontend-mix)**
+by [Cole Medin](https://github.com/coleam00) — the multi-model build, the
+per-phase model routing, and the eight agent skills all originate there. He
+walks through the original in [Claude Plans, Gemini Designs: One Workflow for
+Beautiful Frontends](https://www.youtube.com/watch?v=Xh1z23uBZo0); go watch it
+and support the [channel](https://www.youtube.com/@ColeMedin) — it's
+consistently some of the best agent-engineering content around.
+
+Keelson's workflow engine borrows its schema and DAG concepts from Cole's
+[Archon](https://github.com/coleam00/Archon) as well.
 
 ## License
 

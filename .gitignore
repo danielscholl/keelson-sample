@@ -14,6 +14,13 @@ build/
 # Keelson worktree-isolated runs check out under the project root
 .worktrees/
 
+# Keelson seeds starter command/script assets into the resolved home on first
+# CLI use; run from inside this project, that home is .keelson/, so these turn
+# up untracked. They aren't part of the sample; keep them out of the build
+# commit the finalize node makes.
+.keelson/commands/
+.keelson/scripts/
+
 # Runtime noise
 *.log
 .DS_Store
