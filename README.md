@@ -99,6 +99,25 @@ keelson workflow run frontend-mix --worktree --watch \
   --inputs ARGUMENTS="Build the app described in spec.md. Local only - no deployment this run."
 ```
 
+## Rebuild from a reviewed plan
+
+Nothing in a linear pipeline ever questions the plan it trusts — a single model
+writes the contract every later phase builds against, and a straight line has
+nowhere to review it. So review it *before* the build, then rebuild from the
+hardened version. The optional `PLAN` input takes a path to an existing
+`plan.md`; the `plan` node adopts that file verbatim and skips planning, so every
+downstream phase builds the plan you handed it rather than a freshly generated one:
+
+```bash
+keelson workflow run frontend-mix --worktree --watch \
+  --inputs ARGUMENTS="Build the app described in spec.md. Local only - no deployment this run." \
+  --inputs PLAN=examples/cosmos-plan.md
+```
+
+`examples/cosmos-plan.md` is a committed plan to edit by hand — or hand to a
+*room of reviewers* to harden first. [`examples/README.md`](examples/README.md)
+has the review panel and the full round-trip: build, review, rebuild, diff.
+
 ## Run it by hand instead
 
 The `.agents/skills/frontend-mix-*` skills run the same chain one step at a
