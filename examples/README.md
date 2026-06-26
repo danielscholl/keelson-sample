@@ -34,10 +34,10 @@ different models (all on one Copilot subscription) rather than the "best" one.
 | A moderator who routes the discussion and closes it without debating. | `claude-opus-4.8` | orchestration |
 
 ```bash
-keelson workflow run chamber-genesis "A spec-first build planner who defends the plan and concedes only real, spec-grounded defects." --inputs model=claude-opus-4.8 --inputs provider=copilot
-keelson workflow run chamber-genesis "An adversarial contract skeptic who stress-tests API and data contracts against real-world timing, load, and failure." --inputs model=gpt-5.5 --inputs provider=copilot
-keelson workflow run chamber-genesis "A backend realist who owns persistence, idempotency, and what survives a restart." --inputs model=gemini-3.1-pro-preview --inputs provider=copilot
-keelson workflow run chamber-genesis "A moderator who routes the discussion and closes it without debating." --inputs model=claude-opus-4.8 --inputs provider=copilot
+keelson workflow run chamber-genesis --arguments "A spec-first build planner who defends the plan and concedes only real, spec-grounded defects." --inputs model=claude-opus-4.8 --inputs provider=copilot
+keelson workflow run chamber-genesis --arguments "An adversarial contract skeptic who stress-tests API and data contracts against real-world timing, load, and failure." --inputs model=gpt-5.5 --inputs provider=copilot
+keelson workflow run chamber-genesis --arguments "A backend realist who owns persistence, idempotency, and what survives a restart." --inputs model=gemini-3.1-pro-preview --inputs provider=copilot
+keelson workflow run chamber-genesis --arguments "A moderator who routes the discussion and closes it without debating." --inputs model=claude-opus-4.8 --inputs provider=copilot
 ```
 
 Then convene a `group-chat` room of the three reviewers, moderated by the fourth,
