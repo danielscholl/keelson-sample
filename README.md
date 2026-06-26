@@ -19,6 +19,7 @@ prompt, and compare what each one builds.
 | `spec.md` | A ready-to-use input brief (the "Cosmos" planetarium app) |
 | `.agents/skills/frontend-mix-*` | Eight agent skills for driving the same chain by hand from a chat session |
 | `.agents/artifacts/` | Where a finished run commits its handoff trail |
+| `examples/` | A representative `plan.md` and a ready-to-author review panel for taking Cosmos further with a room (see [`examples/README.md`](examples/README.md)) |
 
 ## The chain
 
