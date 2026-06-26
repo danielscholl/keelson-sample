@@ -24,6 +24,17 @@
 # budget on slower models - raise it with KEELSON_WORKFLOW_PROMPT_TIMEOUT_S
 # on the server when that happens.
 #
+# Inputs (passed with --inputs KEY=VALUE):
+#   ARGUMENTS  the build brief, e.g. "Build the app in spec.md. Local only."
+#   PLAN       optional path to an existing plan.md to build FROM instead of
+#              planning fresh. When set, the plan node adopts that file verbatim
+#              and skips generation; the rest of the chain builds it unchanged.
+#              This is the review round-trip - harden a plan (by hand, or with a
+#              review room), then rebuild from it and diff the result:
+#                keelson workflow run frontend-mix --worktree \
+#                  --inputs ARGUMENTS="Build from spec.md. Local only." \
+#                  --inputs PLAN=examples/cosmos-plan.md
+#
 # Artifact passing convention (READ THIS BEFORE EDITING):
 # each node writes its primary output to a markdown file under
 # `$ARTIFACTS_DIR/` (context.md → plan.md → ui-summary.md →
@@ -103,7 +114,24 @@ nodes:
       You are planning a full-stack web application. Reasoning-heavy work - go
       slow and get the structure right.
 
-      ## STEP 0 - Read the prior artifacts (REQUIRED, do this FIRST)
+      ## STEP 0 - Adopt a provided plan if one was given (check this FIRST)
+
+      This build can run FROM a plan you already have - hand-edited, or hardened
+      by a review - instead of planning from scratch. Such a plan arrives through
+      the optional `PLAN` input: a path to a plan.md. Its value for this run is:
+
+          $inputs.PLAN
+
+      - If that value is NON-EMPTY, a plan was provided. Use the Read tool to open
+        that exact path, then use the Write tool to copy its contents VERBATIM
+        (byte for byte: no edits, no reformatting, no "improvements", no
+        regeneration) into `$ARTIFACTS_DIR/plan.md`. Do not plan from scratch and
+        do not read context.md. End your turn with: "Adopted provided plan from
+        <path> (N bytes). Sections A/B/C carried through." Then STOP; you are done.
+      - If that value is EMPTY, no plan was provided. Ignore this step and generate
+        the plan yourself, starting at STEP 1.
+
+      ## STEP 1 - Read the prior artifacts (REQUIRED when generating)
 
       Before anything else, use the Read tool to open these files in order:
 

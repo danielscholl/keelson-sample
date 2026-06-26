@@ -45,3 +45,26 @@ and hand it SECTION B. For a build instead of a review, the model strengths flip
 the other way: pin a design worker to `gemini-3.1-pro-preview`, a coding worker to
 `gpt-5.5`, and a manager to `claude-opus-4.8`. The chamber rib's tutorials walk
 both paths.
+
+## Rebuild from the reviewed plan
+
+A review only pays off if you can build from its result. Keep the original
+`cosmos-plan.md`, and save the reviewers' hardened version alongside it as
+`cosmos-plan-reviewed.md`. Then build each one on its own `--worktree` branch by
+pointing the `PLAN` input at it:
+
+```bash
+# the plan as written, defects and all
+keelson workflow run frontend-mix --worktree --watch \
+  --inputs ARGUMENTS="Build the app described in spec.md. Local only - no deployment this run." \
+  --inputs PLAN=examples/cosmos-plan.md
+
+# the same build from the hardened plan
+keelson workflow run frontend-mix --worktree --watch \
+  --inputs ARGUMENTS="Build the app described in spec.md. Local only - no deployment this run." \
+  --inputs PLAN=examples/cosmos-plan-reviewed.md
+```
+
+The `plan` node adopts each file verbatim and skips planning, so the only thing
+that changed between the two builds is the contract they were handed. The
+`git diff` between their two branches is the review's payoff made concrete.
