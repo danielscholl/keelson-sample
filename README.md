@@ -20,6 +20,7 @@ prompt, and compare what each one builds.
 | `.agents/skills/frontend-mix-*` | Eight agent skills for driving the same chain by hand from a chat session |
 | `.agents/artifacts/` | Where a finished run commits its handoff trail |
 | `examples/` | A representative `plan.md` and a ready-to-author review panel for taking Cosmos further with a room (see [`examples/README.md`](examples/README.md)) |
+| `backlog.md` | Six scoped improvement items for the app the run builds — fuel for whatever agent surface you point at it next |
 
 ## The chain
 
@@ -117,6 +118,17 @@ keelson workflow run frontend-mix --worktree --watch \
 `examples/cosmos-plan.md` is a committed plan to edit by hand — or hand to a
 *room of reviewers* to harden first. [`examples/README.md`](examples/README.md)
 has the review panel and the full round-trip: build, review, rebuild, diff.
+
+## After the build: work the backlog
+
+A finished run leaves a real app in your tree, and `backlog.md` is what keeps
+it alive: six scoped improvement items written against the spec (not any
+particular build, since every build differs). Hand one to a chat session, a
+workflow, a [Chamber](https://danielscholl.github.io/keelson-rib-chamber/)
+coding room, or a [Squad](https://danielscholl.github.io/keelson-rib-squad/)
+coordinator run — the tutorial rails for both ribs pick their exercises from
+this list, so the same app carries you through the whole
+[tutorial arc](https://danielscholl.github.io/keelson/docs/tutorials/).
 
 ## Run it by hand instead
 
