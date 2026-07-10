@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import CosmosNav from '@/components/CosmosNav';
+import Footer from '@/components/Footer';
 import StarfieldCanvas from '@/components/StarfieldCanvas';
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <StarfieldCanvas />
         <CosmosNav />
         <main className="relative z-10">{children}</main>
+        <Footer />
       </body>
     </html>
   );
