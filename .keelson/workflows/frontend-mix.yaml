@@ -262,12 +262,33 @@ nodes:
       will cause the integration node to skip and the workflow to fail.
 
   # ───────────────────────────────────────────────────────────────
+  # GATE: the two heaviest phases (build-ui, integrate) are told they
+  # MUST write a summary, but a model can end the turn without the Write
+  # and nothing downstream notices — the artifact just goes missing from
+  # the trail. A cheap presence check turns that silent gap into a red
+  # run so the handoff record can't vanish. Bash nodes read the artifacts
+  # dir from $KEELSON_ARTIFACTS_DIR, not the prompt-only $ARTIFACTS_DIR.
+  # ───────────────────────────────────────────────────────────────
+  - id: build-ui-gate
+    depends_on: [build-ui]
+    bash: |
+      set -euo pipefail
+      f="${KEELSON_ARTIFACTS_DIR:-}/ui-summary.md"
+      if [ ! -s "$f" ]; then
+        echo "MISSING ARTIFACT: build-ui ended without writing ui-summary.md ($f)." >&2
+        echo "The UI phase must record its files + // INTEGRATION: stubs; integrate reads this file." >&2
+        exit 1
+      fi
+      echo "ui-summary.md present ($(wc -c < "$f" | tr -d ' ') bytes)."
+    timeout: 15000
+
+  # ───────────────────────────────────────────────────────────────
   # PHASE 4: INTEGRATE — strong reasoning; wires whatever SECTION B
   # calls for using ordinary tools (Bash for any CLI the plan picked).
   # ───────────────────────────────────────────────────────────────
   - id: integrate
     model: claude-sonnet-4.6
-    depends_on: [build-ui]
+    depends_on: [build-ui-gate]
     context: fresh
     prompt: |
       You are wiring backend + integrations into the UI scaffold the previous
@@ -312,12 +333,28 @@ nodes:
       Never end silently.
 
   # ───────────────────────────────────────────────────────────────
+  # GATE: fail loudly if integrate skipped its summary (see build-ui-gate).
+  # ───────────────────────────────────────────────────────────────
+  - id: integrate-gate
+    depends_on: [integrate]
+    bash: |
+      set -euo pipefail
+      f="${KEELSON_ARTIFACTS_DIR:-}/integration-summary.md"
+      if [ ! -s "$f" ]; then
+        echo "MISSING ARTIFACT: integrate ended without writing integration-summary.md ($f)." >&2
+        echo "The integration phase must record every file touched + command run; validate, smoke, and deploy read this file." >&2
+        exit 1
+      fi
+      echo "integration-summary.md present ($(wc -c < "$f" | tr -d ' ') bytes)."
+    timeout: 15000
+
+  # ───────────────────────────────────────────────────────────────
   # PHASE 5: VALIDATE — grind work, 2-attempt cap. Writes EITHER
   # validation-summary.md (clean) OR validation-issues.md (failures).
   # The next node (fix-validation) reads whichever exists.
   # ───────────────────────────────────────────────────────────────
   - id: validate
-    depends_on: [integrate]
+    depends_on: [integrate-gate]
     context: fresh
     prompt: |
       Run the full validation suite on the new app. Two attempts max per
