@@ -1,0 +1,252 @@
+export interface SeedObject {
+  slug: string;
+  name: string;
+  category: string;
+  tagline: string;
+  description: string;
+  stats: Array<{ label: string; value: string }>;
+  facts: string[];
+  sort_order: number;
+}
+
+export const SEED_OBJECTS: SeedObject[] = [
+  {
+    slug: 'the-sun',
+    name: 'The Sun',
+    category: 'Star',
+    tagline: 'The star at the heart of everything.',
+    description: 'The Sun is the star at the center of our solar system. A nearly perfect sphere of hot plasma, it generates energy through nuclear fusion, converting hydrogen into helium at its core. Its immense gravity holds the solar system together, and the light and heat it radiates make life on Earth possible.',
+    stats: [
+      { label: 'Age', value: '~4.6 billion years' },
+      { label: 'Distance from Earth', value: '~150 million km (1 AU)' },
+      { label: 'Core temperature', value: '~15 million °C' },
+      { label: 'Share of Solar System mass', value: '~99.86%' },
+      { label: 'Type', value: 'G2V main-sequence star' },
+    ],
+    facts: [
+      'One million Earths could fit inside the Sun.',
+      'Light from the Sun takes about 8 minutes to reach Earth.',
+      'The Sun rotates faster at its equator than at its poles.',
+      'Its outer atmosphere, the corona, is hotter than its surface — a mystery still being studied.',
+    ],
+    sort_order: 1,
+  },
+  {
+    slug: 'jupiter',
+    name: 'Jupiter',
+    category: 'Planet',
+    tagline: 'A world of storms that never end.',
+    description: 'Jupiter is the largest planet in our solar system — a gas giant with no solid surface. Its turbulent atmosphere is famous for the Great Red Spot, an anticyclonic storm wider than Earth that has raged for hundreds of years. Jupiter\'s powerful magnetic field and dozens of moons make it a solar system unto itself.',
+    stats: [
+      { label: 'Distance from Sun', value: '~778 million km' },
+      { label: 'Moons', value: '95 officially recognized' },
+      { label: 'Day length', value: '~10 hours' },
+      { label: 'Great Red Spot', value: 'Wider than Earth' },
+    ],
+    facts: [
+      'Jupiter has the shortest day of any planet in the solar system.',
+      'Its moon Ganymede is larger than the planet Mercury.',
+      'Jupiter acts as a shield, its gravity deflecting or capturing many asteroids.',
+      'The Great Red Spot has been observed since at least the 17th century.',
+    ],
+    sort_order: 2,
+  },
+  {
+    slug: 'saturn',
+    name: 'Saturn',
+    category: 'Planet',
+    tagline: 'Ringed wonder of the outer system.',
+    description: 'Saturn is the sixth planet from the Sun and the second-largest in the solar system. It is famous for its stunning ring system — made of ice and rock particles — and its remarkably low density. Saturn is the only planet in our solar system less dense than water.',
+    stats: [
+      { label: 'Distance from Sun', value: '~1.4 billion km (9.5 AU)' },
+      { label: 'Density', value: 'Less than water' },
+      { label: 'Largest moon', value: 'Titan' },
+      { label: 'Notable feature', value: 'Planetary ring system of ice and rock' },
+    ],
+    facts: [
+      'Saturn\'s rings are incredibly thin — often less than 100 meters thick despite being 282,000 km wide.',
+      'Saturn has at least 146 confirmed moons.',
+      'Winds on Saturn can reach up to 1,800 km/h.',
+      'The Cassini spacecraft orbited Saturn for 13 years before its mission ended in 2017.',
+    ],
+    sort_order: 3,
+  },
+  {
+    slug: 'mars',
+    name: 'Mars',
+    category: 'Planet',
+    tagline: 'The red frontier, waiting.',
+    description: 'Mars is the fourth planet from the Sun and the second-smallest in the solar system. Its distinctive red color comes from iron oxide (rust) on its surface. Mars hosts Olympus Mons, the largest volcano in the solar system, and Valles Marineris, a canyon system that dwarfs the Grand Canyon.',
+    stats: [
+      { label: 'Distance from Sun', value: '~228 million km' },
+      { label: 'Olympus Mons height', value: '~22 km' },
+      { label: 'Moons', value: 'Phobos and Deimos (2)' },
+      { label: 'Surface color', value: 'Iron oxide red' },
+    ],
+    facts: [
+      'A day on Mars is very similar to Earth — about 24 hours and 37 minutes.',
+      'Mars has the tallest volcano in the solar system at about 22 km high.',
+      'The Martian sky appears reddish-orange due to dust suspended in the atmosphere.',
+      'Mars has seasons, polar ice caps, and ancient evidence of liquid water.',
+    ],
+    sort_order: 4,
+  },
+  {
+    slug: 'europa',
+    name: 'Europa',
+    category: 'Moon',
+    tagline: 'An ocean locked beneath the ice.',
+    description: 'Europa is one of Jupiter\'s four large Galilean moons. Beneath its icy, cracked surface lies a vast subsurface saltwater ocean — possibly containing twice as much liquid water as all of Earth\'s oceans combined. This makes Europa one of the most compelling candidates for extraterrestrial life in our solar system.',
+    stats: [
+      { label: 'Parent planet', value: 'Jupiter' },
+      { label: 'Surface', value: 'Icy crust over subsurface saltwater ocean' },
+      { label: 'Size', value: 'Slightly smaller than Earth\'s Moon' },
+      { label: 'Significance', value: 'One of the best candidates for extraterrestrial life' },
+    ],
+    facts: [
+      'Europa\'s surface is one of the smoothest in the solar system, reshaped constantly by tidal forces.',
+      'The cracked lines on Europa\'s surface may be caused by tidal flexing from Jupiter\'s gravity.',
+      'NASA\'s Europa Clipper mission will study Europa up close starting in the 2030s.',
+      'The subsurface ocean is kept liquid by tidal heating from Jupiter.',
+    ],
+    sort_order: 5,
+  },
+  {
+    slug: 'titan',
+    name: 'Titan',
+    category: 'Moon',
+    tagline: 'A world with weather — just not ours.',
+    description: 'Titan is Saturn\'s largest moon and the only moon in our solar system with a dense atmosphere. Its thick nitrogen atmosphere and surface lakes and rivers of liquid methane and ethane create a world with weather — just not Earth\'s. Titan\'s chemistry offers a fascinating glimpse into what pre-life Earth might have looked like.',
+    stats: [
+      { label: 'Parent planet', value: 'Saturn' },
+      { label: 'Atmosphere', value: 'Thick nitrogen (only moon with dense atmosphere)' },
+      { label: 'Surface feature', value: 'Liquid methane and ethane lakes and rivers' },
+    ],
+    facts: [
+      'Titan is larger than the planet Mercury.',
+      'It has a weather cycle similar to Earth\'s — but with methane instead of water.',
+      'The Huygens probe landed on Titan in 2005, the first landing in the outer solar system.',
+      'Titan\'s thick atmosphere creates an orange haze that hides its surface from direct view.',
+    ],
+    sort_order: 6,
+  },
+  {
+    slug: 'betelgeuse',
+    name: 'Betelgeuse',
+    category: 'Star',
+    tagline: 'A dying giant that will light the sky.',
+    description: 'Betelgeuse is one of the largest and most luminous stars visible to the naked eye. A red supergiant in the constellation Orion, it is near the end of its life and will eventually explode as a supernova — potentially visible in daylight from Earth. Its 2019–2020 "Great Dimming" sparked speculation that the explosion was imminent.',
+    stats: [
+      { label: 'Distance', value: '~550–650 light years' },
+      { label: 'Constellation', value: 'Orion' },
+      { label: 'Type', value: 'Red supergiant' },
+      { label: 'Notable event', value: 'Great Dimming 2019–2020' },
+    ],
+    facts: [
+      'Betelgeuse is so large that if placed at the center of our solar system, it would engulf Jupiter.',
+      'Its Great Dimming in 2019–2020 was likely caused by a surface mass ejection cooling to form dust.',
+      'When Betelgeuse goes supernova, it will briefly be visible in daylight from Earth.',
+      'It is one of the few stars whose disk can be resolved from Earth with modern telescopes.',
+    ],
+    sort_order: 7,
+  },
+  {
+    slug: 'sagittarius-a-star',
+    name: 'Sagittarius A*',
+    category: 'Black Hole',
+    tagline: 'Four million suns of pure darkness.',
+    description: 'Sagittarius A* (Sgr A*) is the supermassive black hole at the center of our Milky Way galaxy. With a mass of roughly 4.3 million solar masses, it lurks about 26,000 light years from Earth. In 2022, the Event Horizon Telescope collaboration released the first image of Sgr A*, revealing its glowing accretion disk.',
+    stats: [
+      { label: 'Location', value: 'Center of the Milky Way' },
+      { label: 'Mass', value: '~4.3 million solar masses' },
+      { label: 'Distance from Earth', value: '~26,000 light years' },
+      { label: 'First imaged', value: '2022, Event Horizon Telescope' },
+    ],
+    facts: [
+      'Sgr A* is relatively quiet compared to other galactic centers — it is not currently feeding actively.',
+      'Stars orbit Sgr A* at speeds up to 7,600 km/s — about 2.5% the speed of light.',
+      'Its image by the EHT took years of global collaboration and petabytes of data.',
+      'The black hole\'s event horizon is roughly the size of Mercury\'s orbit around the Sun.',
+    ],
+    sort_order: 8,
+  },
+  {
+    slug: 'orion-nebula',
+    name: 'Orion Nebula (M42)',
+    category: 'Nebula',
+    tagline: 'A stellar nursery hiding in plain sight.',
+    description: 'The Orion Nebula (Messier 42) is one of the most studied objects in the night sky. Located in the sword of Orion, this stellar nursery — a vast cloud of gas and dust — is actively forming new stars. It is one of the brightest nebulae and is just barely visible to the naked eye as a fuzzy star.',
+    stats: [
+      { label: 'Type', value: 'Stellar nursery' },
+      { label: 'Distance', value: '~1,344 light years' },
+      { label: 'Constellation', value: 'Orion (middle "star" of the sword)' },
+      { label: 'Visibility', value: 'Naked eye' },
+    ],
+    facts: [
+      'The Orion Nebula is about 24 light years across.',
+      'At its heart lies the Trapezium cluster — four massive young stars that illuminate the nebula.',
+      'Over 700 stars in various stages of formation have been identified inside it.',
+      'It was one of the first nebulae photographed, in 1880 by Henry Draper.',
+    ],
+    sort_order: 9,
+  },
+  {
+    slug: 'pillars-of-creation',
+    name: 'Pillars of Creation',
+    category: 'Nebula',
+    tagline: 'Towers of gas where stars are born.',
+    description: 'The Pillars of Creation are towering columns of interstellar gas and dust in the Eagle Nebula (M16). They were made famous by a Hubble Space Telescope image in 1995 and reimaged by the James Webb Space Telescope in 2022. These pillars are active star-forming regions, sculpted by the intense radiation from nearby young stars.',
+    stats: [
+      { label: 'Location', value: 'Eagle Nebula (M16)' },
+      { label: 'Distance', value: '~5,700 light years' },
+      { label: 'Famous images', value: 'Hubble 1995, JWST 2022' },
+    ],
+    facts: [
+      'The tallest pillar is about 4 light years long — close to the distance from the Sun to the nearest star.',
+      'The pillars may already be gone — light from a supernova that destroyed them might not have reached us yet.',
+      'EGGs (Evaporating Gaseous Globules) dot the surfaces — these are newly forming stars.',
+      'The JWST image revealed previously hidden protostars within the pillars.',
+    ],
+    sort_order: 10,
+  },
+  {
+    slug: 'andromeda-galaxy',
+    name: 'Andromeda Galaxy (M31)',
+    category: 'Galaxy',
+    tagline: 'Our nearest neighbor — and our fate.',
+    description: 'The Andromeda Galaxy is the nearest major galaxy to the Milky Way. Visible to the naked eye on dark nights, it contains roughly one trillion stars. Andromeda is on a collision course with our galaxy — in about 4.5 billion years, the two will merge in a spectacular galactic collision, forming a new elliptical galaxy.',
+    stats: [
+      { label: 'Distance', value: '~2.5 million light years' },
+      { label: 'Stars', value: '~1 trillion' },
+      { label: 'Fate', value: 'On collision course with Milky Way in ~4.5 billion years' },
+      { label: 'Type', value: 'Spiral galaxy' },
+    ],
+    facts: [
+      'Andromeda is the most distant object you can see with the naked eye.',
+      'It contains at least two satellite galaxies: M32 and M110.',
+      'When Andromeda and the Milky Way merge, our Sun will likely be flung into a new orbit.',
+      'Despite the collision, individual stars are unlikely to collide due to the vast distances between them.',
+    ],
+    sort_order: 11,
+  },
+  {
+    slug: 'trappist-1',
+    name: 'TRAPPIST-1',
+    category: 'Exoplanet System',
+    tagline: 'Seven chances at a second Earth.',
+    description: 'TRAPPIST-1 is an ultracool dwarf star located about 40 light years from Earth. Orbiting it are seven Earth-sized rocky planets, several of which are in the habitable zone — the region where liquid water could exist on the surface. It is one of the most studied and exciting exoplanet systems ever discovered.',
+    stats: [
+      { label: 'Distance', value: '~40 light years' },
+      { label: 'Planets', value: '7 Earth-sized' },
+      { label: 'Habitable zone planets', value: 'Several' },
+      { label: 'Star type', value: 'Ultracool dwarf' },
+    ],
+    facts: [
+      'The TRAPPIST-1 planets are so close together that from one planet, neighboring planets would appear larger than our Moon.',
+      'A year on TRAPPIST-1b, the innermost planet, lasts just 1.5 Earth days.',
+      'The star is so dim that its planets receive similar amounts of light to Mars, despite being much closer.',
+      'James Webb Space Telescope has been studying its atmosphere in detail.',
+    ],
+    sort_order: 12,
+  },
+];
