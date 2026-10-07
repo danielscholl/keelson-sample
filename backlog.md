@@ -1,10 +1,10 @@
 # Backlog — Cosmos
 
-The `frontend-mix` workflow ends with a working app, and a working app is where
-the interesting work starts. This backlog is the fuel for everything that comes
-after the first build: hand an item to a coding agent, a [Chamber](https://danielscholl.github.io/keelson-rib-chamber/)
-coding room, or a [Squad](https://danielscholl.github.io/keelson-rib-squad/)
-coordinator run, and compare how each one works the same change.
+Both builds end with a working app, the `frontend-mix` pipeline and the factory
+run over `factory/backlog.json`, and a working app is where the interesting work
+starts. This backlog is what comes after the first build: hand an item to a
+chat session, a workflow, or a swarm, and compare how each one works the same
+change.
 
 Every build of Cosmos is different — same spec, different models, different
 code — so each item below is written against the **spec's capabilities**, not
@@ -88,7 +88,7 @@ keelson chat
 keelson workflow run plan-act-evaluate --inputs ARGUMENTS="backlog.md item 3"
 ```
 
-Or hand an item to a [Chamber coding room](https://danielscholl.github.io/keelson-rib-chamber/tutorials/)
-or a [Squad coordinator](https://danielscholl.github.io/keelson-rib-squad/tutorials/) —
-the tutorial rails for both ribs pick specific items from this list and walk
-the whole loop.
+Or run the factory again: file the items you want as beads (`bd create`, with
+`bd dep add` for any order between them), and start a swarm with the prompt in
+`factory/PROMPT.md`. Item 6 is analysis, not code, so label it for a reviewer
+rather than a writer.
