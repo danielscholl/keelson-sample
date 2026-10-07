@@ -8,12 +8,13 @@ in `spec.md`), in two shapes:
   line and routes each phase to the model class that earns its tokens there:
   fast models for grind work, strong reasoning for judgment, a UI-strong model
   for design. Swap the models per node, re-run, and compare.
-- **A factory.** `factory/backlog.json` is the same build cut into eight beads
+- **A factory.** `factory/backlog.json` is the same build cut into eleven beads
   with real dependencies. Seed it into a [beads](https://github.com/steveyegge/beads)
   tracker and a [swarm](https://github.com/danielscholl/keelson-rib-swarm) of
   agents works the graph in dependency order: writers build ready beads side by
-  side, a reviewer reads every diff against its bead's acceptance criteria, and
-  the lead merges each change and closes its bead.
+  side, a design critic judges screenshots of every visible change, a reviewer
+  reads every diff against its bead's acceptance criteria, and the lead merges
+  each approved change and closes its bead.
 
 > **Follow the tutorials:**
 > [the pipeline](https://danielscholl.github.io/keelson/docs/tutorials/frontend-mix/) ·
@@ -160,14 +161,22 @@ keelson stop && keelson start
 keelson project add cosmos-factory "$(pwd)"
 ```
 
-On the Swarms tab, paste the prompt from `factory/PROMPT.md`, choose **Crew**,
-turn on **Factory mode**, pick `cosmos-factory`, and turn on **Write** and
-**Use the tracker**. Keep the Beads tab open beside it to watch the board drain.
-When the swarm concludes, `main` carries one reviewed merge per bead:
+On the Swarms tab, paste the brief from `factory/BRIEF.md` followed by the
+factory section of `factory/PROMPT.md`. Choose **Fleet**, turn on **Factory
+mode**, pick `cosmos-factory`, and turn on **Write** and **Use the tracker**.
+Keep the Beads tab open beside it to watch the board drain. When the swarm
+concludes, `main` carries one reviewed merge per bead:
 
 ```bash
 bun install && bun test && bun run dev
 ```
+
+## Measure it
+
+`factory/BRIEF.md` is model-neutral, so it doubles as an eval: hand the brief
+alone to a single coding agent in a fresh clone, run the factory on the same
+brief in another, and compare the two sites, their tests, and what each one
+checked. Re-run the pair as models improve.
 
 ## After the build: work the backlog
 

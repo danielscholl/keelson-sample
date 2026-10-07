@@ -6,7 +6,10 @@
       "title": "Scaffold the Cosmos app",
       "type": "task",
       "priority": 0,
-      "labels": ["cosmos", "foundation"],
+      "labels": [
+        "cosmos",
+        "foundation"
+      ],
       "description": "Lay the foundation every other bead builds on. spec.md is the brief.\n\nStack, fixed for the whole backlog: Bun and TypeScript, no frontend framework, no third-party runtime dependencies. Bun.serve with HTML imports serves the pages and bundles their scripts; bun:sqlite is the store; bun test runs the tests.\n\n- package.json with scripts: dev (bun --hot src/server.ts), start (bun src/server.ts), test (bun test), typecheck (tsc --noEmit).\n- tsconfig.json for Bun, strict mode.\n- src/server.ts exports startServer(port) that returns the Bun server, and starts one on PORT (default 3000) when run directly.\n- src/index.html as a placeholder page with the dark-sky palette the spec asks for.\n- GET /api/health returns {\"ok\":true}.\n- .gitignore covers node_modules/ and data/.",
       "acceptance_criteria": "bun install, bun test and bun run typecheck all pass. A test starts the server on port 0 and gets {\"ok\":true} from /api/health. bun run dev serves the placeholder page at http://localhost:3000."
     },
@@ -15,7 +18,10 @@
       "title": "Seed the catalog with the canonical objects",
       "type": "task",
       "priority": 1,
-      "labels": ["cosmos", "data"],
+      "labels": [
+        "cosmos",
+        "data"
+      ],
       "description": "Encode the 12 objects from spec.md as a typed data module, src/catalog.ts.\n\nEach object: slug, name, category, tagline, description, stats (a list of {label, value}), facts (2 to 4 strings). Categories are exactly the seven the spec names. Every number in spec.md is canonical: copy it, never invent or round one. Taglines and prose may be rewritten for voice.\n\nExport the list, the category list, and findObject(slug).",
       "acceptance_criteria": "Tests prove: 12 objects with unique slugs; every spec category is used; findObject returns undefined for an unknown slug; spot checks of canonical facts pass (Jupiter has 95 moons, Olympus Mons is about 22 km, Sagittarius A* is about 4.3 million solar masses, Andromeda is about 2.5 million light years away)."
     },
@@ -24,16 +30,34 @@
       "title": "Store chills reactions in SQLite",
       "type": "task",
       "priority": 1,
-      "labels": ["cosmos", "data"],
+      "labels": [
+        "cosmos",
+        "data"
+      ],
       "description": "The one write path in the app: an anonymous \"this gave me chills\" reaction, persisted server-side.\n\nsrc/store.ts opens bun:sqlite at COSMOS_DB (default data/cosmos.db, created on first use; tests pass \":memory:\"). Two tables: reactions(slug primary key, count) and reaction_log(slug, client, day) with a unique (slug, client, day).\n\nExport react(slug, client, day) returning {accepted, count}: in one transaction, insert the log row and increment the count only if the insert succeeded. A second reaction from the same client on the same day is refused and leaves the count unchanged. No check-then-increment: two simultaneous reactions from different clients must both count. Export count(slug), which is 0 for an object nobody has reacted to.",
       "acceptance_criteria": "Tests prove: a first reaction is accepted and counts; a second from the same client and day is refused with the count unchanged; the same client on the next day is accepted; 50 reactions from 50 clients count exactly 50; counts survive reopening the same database file."
+    },
+    {
+      "key": "design",
+      "title": "Lay down the Cosmos design system",
+      "type": "task",
+      "priority": 1,
+      "labels": [
+        "cosmos",
+        "ui"
+      ],
+      "description": "One visual language for every page, so views built by different hands look like one site.\n\nArt direction: a cinematic planetarium at night, not a dashboard. Near-black blue backgrounds with depth (layered radial gradients and a faint procedural starfield), one warm accent used sparingly for actions and labels, generous negative space, oversized display headlines with tight tracking, small uppercase eyebrow labels with wide tracking. System font stacks only; no web fonts, images or CDNs.\n\nDeliver src/styles.css: design tokens as CSS custom properties (palette, a modular type scale from eyebrow to display, spacing, radii, shadows, motion durations), base styles, and the shared components every page uses: site header and footer, eyebrow, button (primary and quiet), chip, card, stat, and a focus ring. Deliver src/shell.ts exporting renderHeader() and renderFooter() so both pages share them. Animation respects prefers-reduced-motion.",
+      "acceptance_criteria": "src/styles.css defines the tokens and components named above and no other file hard-codes a color. A test reads styles.css and asserts the token set and a prefers-reduced-motion block exist. The placeholder index.html uses the shell and tokens and still serves."
     },
     {
       "key": "catalog-api",
       "title": "Serve the catalog API",
       "type": "task",
       "priority": 1,
-      "labels": ["cosmos", "api"],
+      "labels": [
+        "cosmos",
+        "api"
+      ],
       "description": "Public JSON endpoints over the catalog, routed in src/server.ts:\n\n- GET /api/objects with optional category and q (case-insensitive name search); both filters combine.\n- GET /api/objects/:slug, 404 with {\"error\"} for an unknown slug.\n- GET /api/categories, each category with its object count.\n- GET /api/today?date=YYYY-MM-DD: the object of the day. The client sends its own local calendar date, so the pick rolls over at the visitor's midnight, not the server's. Without date, use the server's local date. The pick is deterministic: the same date always returns the same object, and 12 consecutive dates return all 12 objects.",
       "acceptance_criteria": "Tests start the server on port 0 and cover every endpoint: filter by category, search by name, both together, unknown slug 404, category counts summing to 12, the same date returning the same object, and 12 consecutive dates covering all 12 objects. A malformed date is a 400."
     },
@@ -42,17 +66,35 @@
       "title": "Serve the chills endpoint",
       "type": "task",
       "priority": 1,
-      "labels": ["cosmos", "api"],
+      "labels": [
+        "cosmos",
+        "api"
+      ],
       "description": "Expose the reaction store over HTTP.\n\n- GET /api/objects/:slug/chills returns {count}.\n- POST /api/objects/:slug/chills reacts once per client per day. The client is the first x-forwarded-for address, else the request's remote address. The day is the visitor's local date from the request body {\"date\":\"YYYY-MM-DD\"}, defaulting to the server's local date.\n- An accepted reaction returns 200 {count}. A repeat returns 429 {count, message} with a calm message saying this visitor already sent chills today.\n- Unknown slugs are 404 on both methods.",
       "acceptance_criteria": "Tests against a server on port 0 with an in-memory store: GET starts at 0; the first POST returns 200 and count 1; a second POST from the same client and date returns 429 with count still 1; a different x-forwarded-for client is accepted; unknown slugs are 404."
+    },
+    {
+      "key": "visuals",
+      "title": "Render every object as its own SVG illustration",
+      "type": "feature",
+      "priority": 1,
+      "labels": [
+        "cosmos",
+        "ui"
+      ],
+      "description": "The spec says to render the cosmos rather than paste photos. Give each of the 12 objects a distinct, recognizable procedural SVG, so a visitor can tell Saturn from Jupiter at a glance.\n\nsrc/visuals.ts exports renderVisual(slug, {size}) returning an SVG string, plus renderStarfield(seed, {width, height}). Use gradients, filters and shapes, using the design tokens' palette where it fits. Cues each one must show:\n- The Sun: white-gold core, corona glow, faint surface granulation.\n- Jupiter: horizontal cloud bands and the Great Red Spot.\n- Saturn: a tilted ring system that passes in front of and behind the planet.\n- Mars: rust surface with a white polar cap.\n- Europa: pale ice crossed by reddish crack lines.\n- Titan: a hazy orange atmosphere with a soft limb.\n- Betelgeuse: a bloated, mottled red supergiant.\n- Sagittarius A*: a black shadow inside a bright, lensed accretion ring.\n- Orion Nebula: layered glowing gas clouds around a small bright star cluster.\n- Pillars of Creation: dark towering columns against a glowing backdrop.\n- Andromeda: a tilted spiral disk with a bright core and dust lanes.\n- TRAPPIST-1: a dim red star with seven small planets on orbit lines.\nOutput is deterministic for a slug and size, and every id inside an SVG is unique per render so several can share a page.",
+      "acceptance_criteria": "Tests prove: all 12 slugs render distinct SVG with a viewBox and no external references; output is deterministic; two renders on one page share no element ids; Saturn's SVG contains its ring drawn both behind and in front of the planet; an unknown slug gets a neutral fallback."
     },
     {
       "key": "browse-ui",
       "title": "Build the landing and browse view",
       "type": "feature",
       "priority": 2,
-      "labels": ["cosmos", "ui"],
-      "description": "The page a visitor lands on, src/index.html plus its script. Cinematic, dark-sky, rendered with CSS and SVG (a procedural starfield, no photographs).\n\n- A hero featuring today's object from /api/today, sending the visitor's local date.\n- The catalog: every object as a card (name, category, tagline) linking to its detail view.\n- Narrowing: a category filter and a name search. The active filter lives in the URL query (for example ?category=Nebula&q=or), so a reload or a shared link shows the same view.\n\nKeep URL state and filtering in pure functions so they test without a browser.",
+      "labels": [
+        "cosmos",
+        "ui"
+      ],
+      "description": "The page a visitor lands on, src/index.html plus its script. Built entirely from the design system and the object visuals; it should feel like walking into a planetarium.\n\n- A full-bleed hero over the procedural starfield, with an oversized headline and today's object from /api/today (sending the visitor's local date) shown large with its visual.\n- The catalog: every object as a card with its visual, category eyebrow, name and tagline, linking to its detail view.\n- Narrowing: a category filter and a name search. The active filter lives in the URL query (for example ?category=Nebula&q=or), so a reload or a shared link shows the same view.\n\nKeep URL state and filtering in pure functions so they test without a browser.",
       "acceptance_criteria": "Unit tests cover parsing and serializing the URL state and filtering the catalog by category, search and both. Loading /?category=Nebula shows only the two nebulae, and the hero shows today's object."
     },
     {
@@ -60,29 +102,113 @@
       "title": "Build the object detail view",
       "type": "feature",
       "priority": 2,
-      "labels": ["cosmos", "ui"],
-      "description": "One object in full, served at /objects/:slug from src/detail.html plus its script.\n\n- Description, the key stats, and the did-you-know facts.\n- The chills control: shows the count, POSTs with the visitor's local date, and on a 429 shows the server's calm message in place, never as an error, with the count unchanged.\n- Keyboard: left and right arrows (and k and j) move to the previous and next object in catalog order, wrapping at the ends; Escape returns to the catalog. Keys are ignored while focus is in a text input.\n- An unknown slug shows a friendly not-found view with a link home.\n\nKeep navigation order and key handling in pure functions so they test without a browser.",
+      "labels": [
+        "cosmos",
+        "ui"
+      ],
+      "description": "One object in full, served at /objects/:slug from src/detail.html plus its script.\n\n- A hero with the object's visual shown large over the starfield, its name as display type and its tagline.\n- Description, the key stats as design-system stat tiles, and the did-you-know facts.\n- Built entirely from the design system and shell, so it reads as the same site as the landing page.\n- The chills control: shows the count, POSTs with the visitor's local date, and on a 429 shows the server's calm message in place, never as an error, with the count unchanged.\n- Keyboard: left and right arrows (and k and j) move to the previous and next object in catalog order, wrapping at the ends; Escape returns to the catalog. Keys are ignored while focus is in a text input.\n- An unknown slug shows a friendly not-found view with a link home.\n\nKeep navigation order and key handling in pure functions so they test without a browser.",
       "acceptance_criteria": "Unit tests cover previous and next with wrapping, the key map, ignoring keys while typing, and rendering the 429 message. /objects/jupiter shows Jupiter's 95 moons; a second chills click shows the already-sent message and keeps the count."
+    },
+    {
+      "key": "polish",
+      "title": "Polish for phones, keyboards and motion",
+      "type": "task",
+      "priority": 2,
+      "labels": [
+        "cosmos",
+        "ui"
+      ],
+      "description": "Make both views hold up beyond a desktop browser.\n\n- At 375px wide nothing scrolls sideways, the catalog drops to one column, and display type scales down with clamp().\n- Every interactive element has a visible focus ring from the design system, and tab order follows reading order.\n- Text meets WCAG AA contrast against its background.\n- Hover and entrance motion is subtle and switched off under prefers-reduced-motion.\n- Each page has a meaningful title, a meta description, and an inline SVG favicon.",
+      "acceptance_criteria": "Tests cover the pure pieces (clamp values present in styles.css, a favicon link in both HTML files, the reduced-motion block). The reviewer checks the diff against every bullet above."
     },
     {
       "key": "acceptance",
       "title": "Prove the spec end to end",
       "type": "task",
       "priority": 2,
-      "labels": ["cosmos", "verification"],
+      "labels": [
+        "cosmos",
+        "verification"
+      ],
       "description": "Close the build by proving every capability in spec.md against the running app.\n\nsrc/acceptance.test.ts starts the server on port 0 with an in-memory store and walks the spec's jobs to be done: the landing page and today's object, browse and narrow, open an object, the object of the day staying fixed for a date, and a chills reaction that persists and refuses a same-day repeat. It fetches the HTML pages too, not only the API.\n\nAdd a Run Cosmos section to README.md: install, test, and dev commands, and where the database lives.",
       "acceptance_criteria": "bun test passes with the acceptance test included, bun run typecheck passes, and README.md tells a newcomer how to run the app in three commands."
     }
   ],
   "edges": [
-    { "from_key": "catalog", "to_key": "scaffold", "type": "blocks" },
-    { "from_key": "store", "to_key": "scaffold", "type": "blocks" },
-    { "from_key": "catalog-api", "to_key": "catalog", "type": "blocks" },
-    { "from_key": "chills-api", "to_key": "store", "type": "blocks" },
-    { "from_key": "chills-api", "to_key": "catalog-api", "type": "blocks" },
-    { "from_key": "browse-ui", "to_key": "catalog-api", "type": "blocks" },
-    { "from_key": "detail-ui", "to_key": "chills-api", "type": "blocks" },
-    { "from_key": "acceptance", "to_key": "browse-ui", "type": "blocks" },
-    { "from_key": "acceptance", "to_key": "detail-ui", "type": "blocks" }
+    {
+      "from_key": "catalog",
+      "to_key": "scaffold",
+      "type": "blocks"
+    },
+    {
+      "from_key": "store",
+      "to_key": "scaffold",
+      "type": "blocks"
+    },
+    {
+      "from_key": "catalog-api",
+      "to_key": "catalog",
+      "type": "blocks"
+    },
+    {
+      "from_key": "chills-api",
+      "to_key": "store",
+      "type": "blocks"
+    },
+    {
+      "from_key": "chills-api",
+      "to_key": "catalog-api",
+      "type": "blocks"
+    },
+    {
+      "from_key": "design",
+      "to_key": "scaffold",
+      "type": "blocks"
+    },
+    {
+      "from_key": "visuals",
+      "to_key": "design",
+      "type": "blocks"
+    },
+    {
+      "from_key": "visuals",
+      "to_key": "catalog",
+      "type": "blocks"
+    },
+    {
+      "from_key": "browse-ui",
+      "to_key": "catalog-api",
+      "type": "blocks"
+    },
+    {
+      "from_key": "browse-ui",
+      "to_key": "visuals",
+      "type": "blocks"
+    },
+    {
+      "from_key": "detail-ui",
+      "to_key": "chills-api",
+      "type": "blocks"
+    },
+    {
+      "from_key": "detail-ui",
+      "to_key": "visuals",
+      "type": "blocks"
+    },
+    {
+      "from_key": "polish",
+      "to_key": "browse-ui",
+      "type": "blocks"
+    },
+    {
+      "from_key": "polish",
+      "to_key": "detail-ui",
+      "type": "blocks"
+    },
+    {
+      "from_key": "acceptance",
+      "to_key": "polish",
+      "type": "blocks"
+    }
   ]
 }
