@@ -1,15 +1,24 @@
-# keelson-sample · frontend-mix
+# keelson-sample · Cosmos
 
 A template project for [Keelson](https://github.com/danielscholl/keelson) that
-turns one workflow into a provider/model test bench. The `frontend-mix`
-workflow builds a full-stack web app from a short brief by routing each phase
-of the build to the model class that earns its tokens at that step — fast
-models for grind work, strong reasoning for judgment, a UI-strong model for
-design. Swap the models (or whole providers) per node, re-run the same
-prompt, and compare what each one builds.
+builds one app, "Cosmos" (a no-login, local-only planetarium explorer described
+in `spec.md`), in two shapes:
 
-> **Follow the full tutorial:**
-> [danielscholl.github.io/keelson/docs/tutorials/frontend-mix](https://danielscholl.github.io/keelson/docs/tutorials/frontend-mix/)
+- **A pipeline.** The `frontend-mix` workflow builds the app in one straight
+  line and routes each phase to the model class that earns its tokens there:
+  fast models for grind work, strong reasoning for judgment, a UI-strong model
+  for design. Swap the models per node, re-run, and compare.
+- **A factory.** `factory/backlog.json` is the same build cut into eight beads
+  with real dependencies. Seed it into a [beads](https://github.com/steveyegge/beads)
+  tracker and a [swarm](https://github.com/danielscholl/keelson-rib-swarm) of
+  agents works the graph in dependency order: writers build ready beads side by
+  side, a reviewer reads every diff against its bead's acceptance criteria, and
+  the lead merges each change and closes its bead.
+
+> **Follow the tutorials:**
+> [the pipeline](https://danielscholl.github.io/keelson/docs/tutorials/frontend-mix/) ·
+> [the backlog](https://danielscholl.github.io/keelson/docs/tutorials/plan-the-backlog/) ·
+> [the factory](https://danielscholl.github.io/keelson/docs/tutorials/run-the-factory/)
 
 ## What's in this repo
 
@@ -19,10 +28,14 @@ prompt, and compare what each one builds.
 | `spec.md` | A ready-to-use input brief (the "Cosmos" planetarium app) |
 | `.agents/skills/frontend-mix-*` | Eight agent skills for driving the same chain by hand from a chat session |
 | `.agents/artifacts/` | Where a finished run commits its handoff trail |
-| `examples/` | A representative `plan.md` and a ready-to-author review panel for taking Cosmos further with a room (see [`examples/README.md`](examples/README.md)) |
-| `backlog.md` | Six scoped improvement items for the app the run builds — fuel for whatever agent surface you point at it next |
+| `factory/backlog.json` | The Cosmos build as eight beads with dependencies, ready for `bd create --graph` |
+| `factory/PROMPT.md` | The swarm prompt that drains the backlog |
+| `examples/` | A representative `plan.md` to review or build from (see [`examples/README.md`](examples/README.md)) |
+| `backlog.md` | Scoped improvements for the app once it is built, by either shape |
 
-## The chain
+## The pipeline
+
+### The chain
 
 Each node writes its primary output to a markdown file in the run's artifact
 directory; the next node reads that file. The file is the contract — which is
@@ -46,7 +59,7 @@ build that typechecks, lints, and serves HTTP 200 but renders blank or
 unstyled (a Tailwind `content` glob that misses a directory does exactly
 this). Static checks pass it; only driving the running app catches it.
 
-## Quick start
+### Quick start
 
 You need [Keelson installed](https://danielscholl.github.io/keelson/docs/guides/installation/)
 and its default provider (GitHub Copilot) authenticated — `keelson doctor`
@@ -78,7 +91,7 @@ keelson workflow respond <runId> approve-deploy "skip"
 When the run completes, the app is built in your working tree and the full
 handoff trail is committed under `.agents/artifacts/`.
 
-## Mix the models
+### Mix the models
 
 `.keelson/workflows/frontend-mix.yaml` is the swap point. Each node pins a
 `model:`; the workflow header explains the routing. Change one line — say,
@@ -89,7 +102,7 @@ To mix whole providers (Claude, Pi, Codex), enable them in
 `~/.keelson/config.json` and add a `provider:` line to a node. See the
 [configuration guide](https://danielscholl.github.io/keelson/docs/guides/configuration/).
 
-## Compare runs
+### Compare runs
 
 Run with `--worktree` and each attempt lands on its own branch
 (`keelson/frontend-mix/<run-id>`) in an isolated git worktree — your main
@@ -100,7 +113,7 @@ keelson workflow run frontend-mix --worktree --watch \
   --inputs ARGUMENTS="Build the app described in spec.md. Local only - no deployment this run."
 ```
 
-## Rebuild from a reviewed plan
+### Rebuild from a reviewed plan
 
 Nothing in a linear pipeline ever questions the plan it trusts — a single model
 writes the contract every later phase builds against, and a straight line has
@@ -115,20 +128,53 @@ keelson workflow run frontend-mix --worktree --watch \
   --inputs PLAN=examples/cosmos-plan.md
 ```
 
-`examples/cosmos-plan.md` is a committed plan to edit by hand — or hand to a
-*room of reviewers* to harden first. [`examples/README.md`](examples/README.md)
-has the review panel and the full round-trip: build, review, rebuild, diff.
+`examples/cosmos-plan.md` is a committed plan to edit by hand, or hand to a
+swarm of reviewers to harden first. [`examples/README.md`](examples/README.md)
+has the review prompt and the full round trip: build, review, rebuild, diff.
+
+## The factory
+
+You need the `bd` CLI 1.2 or later (`brew install beads`) and two ribs:
+
+```bash
+keelson rib add https://github.com/danielscholl/keelson-rib-beads
+keelson rib add https://github.com/danielscholl/keelson-rib-swarm
+```
+
+The swarm rib also needs a `clickclack` binary on PATH and a grant that lets a
+swarm's lead use the tracker; its
+[install guide](https://danielscholl.github.io/keelson-rib-swarm/guides/install/)
+and the [factory tutorial](https://danielscholl.github.io/keelson/docs/tutorials/run-the-factory/)
+cover both. Then:
+
+```bash
+# 1. A fresh copy with no origin, so the swarm reviews and merges locally
+git clone https://github.com/danielscholl/keelson-sample cosmos-factory
+cd cosmos-factory
+git remote remove origin
+
+# 2. Seed the backlog and register the project
+bd init --skip-agents --skip-hooks --non-interactive --prefix cosmos
+bd create --graph factory/backlog.json
+keelson stop && keelson start
+keelson project add cosmos-factory "$(pwd)"
+```
+
+On the Swarms tab, paste the prompt from `factory/PROMPT.md`, choose **Crew**,
+turn on **Factory mode**, pick `cosmos-factory`, and turn on **Write** and
+**Use the tracker**. Keep the Beads tab open beside it to watch the board drain.
+When the swarm concludes, `main` carries one reviewed merge per bead:
+
+```bash
+bun install && bun test && bun run dev
+```
 
 ## After the build: work the backlog
 
-A finished run leaves a real app in your tree, and `backlog.md` is what keeps
-it alive: six scoped improvement items written against the spec (not any
-particular build, since every build differs). Hand one to a chat session, a
-workflow, a [Chamber](https://danielscholl.github.io/keelson-rib-chamber/)
-coding room, or a [Squad](https://danielscholl.github.io/keelson-rib-squad/)
-coordinator run — the tutorial rails for both ribs pick their exercises from
-this list, so the same app carries you through the whole
-[tutorial arc](https://danielscholl.github.io/keelson/docs/tutorials/).
+Either build leaves a real app in your tree, and `backlog.md` keeps it going:
+scoped improvements written against the spec rather than any one build, since
+every build differs. File them as beads and run the factory again, or hand one
+to a chat session or a workflow.
 
 ## Run it by hand instead
 
@@ -147,6 +193,7 @@ each skill tells you the next step.
   it too).
 - No other keys needed: the bundled `spec.md` describes a no-auth, local-only
   app on purpose.
+- For the factory: the `bd` CLI, the beads and swarm ribs, and `clickclack`.
 
 ## Credits
 
